@@ -1,4 +1,4 @@
-codexusage v1.13.0
+codexusage v1.13.1
 
 轻量 macOS 菜单栏 Codex 额度查看器。
 

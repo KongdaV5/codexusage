@@ -18,9 +18,13 @@ echo "正在编译 codexusage（Objective-C/AppKit）…"
 CODEX_CLI=""
 for candidate in \
   "/Applications/ChatGPT.app/Contents/Resources/codex" \
+  "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex" \
   "/Applications/Codex.app/Contents/Resources/codex" \
+  "/Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex" \
   "$HOME/Applications/ChatGPT.app/Contents/Resources/codex" \
+  "$HOME/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex" \
   "$HOME/Applications/Codex.app/Contents/Resources/codex" \
+  "$HOME/Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex" \
   "/opt/homebrew/bin/codex" \
   "/usr/local/bin/codex" \
   "$HOME/.local/bin/codex" \
@@ -33,15 +37,22 @@ done
 if [[ -z "$CODEX_CLI" ]]; then
   for app in /Applications/*.app "$HOME"/Applications/*.app; do
     [[ -d "$app" ]] || continue
-    candidate="$app/Contents/Resources/codex"
-    if [[ -x "$candidate" ]]; then CODEX_CLI="$candidate"; break; fi
+    for relative_path in \
+      "Contents/Resources/codex" \
+      "Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"; do
+      candidate="$app/$relative_path"
+      if [[ -x "$candidate" ]]; then CODEX_CLI="$candidate"; break 2; fi
+    done
   done
 fi
 
 # 再尝试 Spotlight；最后才依赖 Shell PATH。
 if [[ -z "$CODEX_CLI" ]] && command -v mdfind >/dev/null 2>&1; then
   while IFS= read -r candidate; do
-    [[ "$candidate" == */Contents/Resources/codex ]] || continue
+    case "$candidate" in
+      */Contents/Resources/codex|*/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex) ;;
+      *) continue ;;
+    esac
     if [[ -x "$candidate" ]]; then CODEX_CLI="$candidate"; break; fi
   done < <(mdfind "kMDItemFSName == 'codex'" 2>/dev/null || true)
 fi
@@ -77,8 +88,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
   <key>CFBundleName</key><string>$APP_NAME</string>
   <key>CFBundleDisplayName</key><string>$APP_NAME</string>
-  <key>CFBundleVersion</key><string>13</string>
-  <key>CFBundleShortVersionString</key><string>1.13.0</string>
+  <key>CFBundleVersion</key><string>14</string>
+  <key>CFBundleShortVersionString</key><string>1.13.1</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>

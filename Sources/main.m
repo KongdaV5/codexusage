@@ -127,9 +127,13 @@ static void CUStopTask(NSTask *task, NSFileHandle *writer);
 
     NSArray<NSString *> *candidates = @[
         @"/Applications/ChatGPT.app/Contents/Resources/codex",
+        @"/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
         @"/Applications/Codex.app/Contents/Resources/codex",
+        @"/Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
         [home stringByAppendingPathComponent:@"Applications/ChatGPT.app/Contents/Resources/codex"],
+        [home stringByAppendingPathComponent:@"Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"],
         [home stringByAppendingPathComponent:@"Applications/Codex.app/Contents/Resources/codex"],
+        [home stringByAppendingPathComponent:@"Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"],
         @"/opt/homebrew/bin/codex",
         @"/usr/local/bin/codex",
         [home stringByAppendingPathComponent:@".local/bin/codex"],
@@ -140,15 +144,19 @@ static void CUStopTask(NSTask *task, NSFileHandle *writer);
         if ([fm isExecutableFileAtPath:path]) return path;
     }
 
-    // 兼容未来改名、Beta 版或安装在 ~/Applications：扫描顶层 .app 的 Resources/codex。
+    // 兼容未来改名、Beta 版或安装在 ~/Applications：检查已知的 CLI bundle 布局。
     for (NSString *appsDir in @[@"/Applications", [home stringByAppendingPathComponent:@"Applications"]]) {
         NSArray<NSString *> *entries = [fm contentsOfDirectoryAtPath:appsDir error:nil];
         for (NSString *entry in entries) {
             if (![entry.pathExtension.lowercaseString isEqualToString:@"app"]) continue;
-            NSString *path = [[[appsDir stringByAppendingPathComponent:entry]
-                               stringByAppendingPathComponent:@"Contents/Resources"]
-                              stringByAppendingPathComponent:@"codex"];
-            if ([fm isExecutableFileAtPath:path]) return path;
+            NSString *appPath = [appsDir stringByAppendingPathComponent:entry];
+            for (NSString *relativePath in @[
+                @"Contents/Resources/codex",
+                @"Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            ]) {
+                NSString *path = [appPath stringByAppendingPathComponent:relativePath];
+                if ([fm isExecutableFileAtPath:path]) return path;
+            }
         }
     }
 
@@ -287,7 +295,7 @@ static void CUStopTask(NSTask *task, NSFileHandle *writer);
                 @"method": @"initialize",
                 @"id": @1,
                 @"params": @{
-                    @"clientInfo": @{@"name": @"codexusage", @"title": @"codexusage", @"version": @"1.13.0"},
+                    @"clientInfo": @{@"name": @"codexusage", @"title": @"codexusage", @"version": @"1.13.1"},
                     @"capabilities": @{}
                 }
             };
